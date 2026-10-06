@@ -61,4 +61,5 @@ asyncio_default_fixture_loop_scope = "function"
 addopts = "-q --strict-markers -m 'not integration'"
 markers = [
     "integration: needs a running bus (Kafka, S3, Postgres) configured in .env; run with `-m integration`",
+    "behaviour: the connector as a whole over the in-memory bus; needs Postgres from .env, skipped without it",
 ]
