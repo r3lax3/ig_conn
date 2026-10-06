@@ -1,0 +1,6 @@
+# allow list: only what the image is built from; .env, sessions and caches never enter the context
+*
+!src
+!pyproject.toml
+!uv.lock
+!README.md

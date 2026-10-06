@@ -1,0 +1,53 @@
+# Connector + its own Postgres. Settings come from .env next to this file (see .env.example and README).
+#   docker compose up -d --build
+name: ig-connector
+
+services:
+  connector:
+    build: .
+    image: ig-connector:latest
+    env_file: .env
+    environment:
+      # the bundled Postgres unless DATABASE_URL points elsewhere
+      DATABASE_URL: ${DATABASE_URL:-postgresql://connector:${POSTGRES_PASSWORD}@postgres:5432/connector}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # one replica only: an Account's Session lives in exactly one process (contract 3)
+    # the process exits on purpose (lost Kafka partitions, bad config): docker brings it back
+    restart: unless-stopped
+    # reaps the browser's processes after a login
+    init: true
+    # Chromium needs more shared memory than docker's 64 MB default
+    shm_size: 1gb
+    # after SIGTERM running commands get 8 s, then the consumer leaves the Kafka group
+    stop_grace_period: 20s
+    healthcheck:
+      test: ["CMD", "ig-connector", "health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 20m
+        max-file: "5"
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: connector
+      POSTGRES_DB: connector
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U connector -d connector"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  postgres-data:
