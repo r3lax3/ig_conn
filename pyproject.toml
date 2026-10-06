@@ -18,6 +18,7 @@ dependencies = [
 
 [project.scripts]
 ig-connector = "ig_connector.app:main"
+fake-crm = "ig_connector.devtools.fake_crm:main"
 
 [dependency-groups]
 dev = [
