@@ -12,3 +12,6 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+
+# Behaviour test traces
+.test-runs/
